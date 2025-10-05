@@ -2,7 +2,7 @@
 
 namespace ProjectWebsite.Controllers
 {
-    public class RunInfoController : Controller
+    public class RunController : Controller
     {
         public IActionResult Index()
         {
