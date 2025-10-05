@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using RiftwalkerWebsite.Models;
+using RiftwalkerWebsite.ViewModels;
 
 namespace RiftwalkerWebsite.Controllers
 {

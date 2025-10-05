@@ -1,4 +1,4 @@
-namespace RiftwalkerWebsite.Models
+namespace RiftwalkerWebsite.ViewModels
 {
     public class ErrorViewModel
     {
