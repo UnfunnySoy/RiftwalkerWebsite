@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using RiftwalkerWebsite.ViewModels;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjectWebsite.Models
 {
@@ -13,14 +14,21 @@ namespace ProjectWebsite.Models
         [Required]
         public string Password { get; set; }
 
+        [Required]
         public string Email { get; set; }
 
-        [Required]
         public List<RunModel> Runs { get; set; }
 
         public AccountModel()
         {
             Id = Guid.NewGuid();
+        }
+
+        public AccountModel(AccountCreationViewModel viewModel) : this()
+        {
+            Username = viewModel.Username;
+            Password = viewModel.Password;
+            Email = viewModel.Email;
         }
     }
 }
