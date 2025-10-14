@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectWebsite.Controllers;
 using ProjectWebsite.Models;
 
 namespace RiftwalkerWebsite.Data
@@ -13,6 +12,8 @@ namespace RiftwalkerWebsite.Data
 
         public ApplicationDBContext()
         {
+            //DbPath = "Data/RiftwalkerWebsite.db";
+
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
             DbPath = System.IO.Path.Join(path, "Riftwalker.db");

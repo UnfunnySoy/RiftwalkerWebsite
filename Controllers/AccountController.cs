@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using ProjectWebsite.Models;
 using RiftwalkerWebsite.Data;
@@ -18,19 +19,22 @@ namespace ProjectWebsite.Controllers
         {
             if (viewModel == null || viewModel.Username == null || viewModel.Password == null || viewModel.Email == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
-            ApplicationDBContext dBContext = new ApplicationDBContext();
+            ApplicationDBContext dbContext = new ApplicationDBContext();
 
             AccountModel account = new AccountModel(viewModel);
-            dBContext.Accounts.Add(account);
+            dbContext.Accounts.Add(account);
 
             try
             {
-                dBContext.SaveChanges();
+                dbContext.SaveChanges();
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                return Content("DATABASE FAILURE");
+            }
 
             return Content("SUCCESS: " + account.Id);
         }
@@ -40,15 +44,15 @@ namespace ProjectWebsite.Controllers
         {
             if (id == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
             ApplicationDBContext dbContext = new ApplicationDBContext();
 
-            AccountModel account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
+            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
             if (account == null)
             {
-                return RedirectToAction("Index");
+                return Content("ENTRY DOES NOT EXIST");
             }
 
             return Content("SUCCESS: " + account.Id);
@@ -59,22 +63,50 @@ namespace ProjectWebsite.Controllers
         {
             if (id == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
-            ApplicationDBContext dBContext = new ApplicationDBContext();
+            ApplicationDBContext dbContext = new ApplicationDBContext();
 
-            AccountModel? account = dBContext.Accounts.FirstOrDefault(x => x.Id == id);
+            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
             if (account == null)
             {
-                return RedirectToAction("Index");
+                return Content("ENTRY DOES NOT EXIST");
             }
-            dBContext.Accounts.Remove(account);
+            dbContext.Accounts.Remove(account);
 
             try
             {
-                dBContext.SaveChanges();
-            } catch (Exception) { }
+                dbContext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return Content("DATABASE FAILURE");
+            }
+
+            return Content("SUCCESS: " + account.Id);
+        }
+
+        [HttpPost]
+        public IActionResult TestAccount()
+        {
+            AccountModel account = new AccountModel();
+            account.Username = "test";
+            account.Password = "test";
+            account.Email = "test";
+            account.Runs = null;
+
+            ApplicationDBContext dbContext = new ApplicationDBContext();
+            dbContext.Accounts.Add(account);
+
+            try
+            {
+                dbContext.SaveChanges();
+            }
+            catch (Exception) 
+            {
+                return Content("DATABASE FAILURE");
+            }
 
             return Content("SUCCESS: " + account.Id);
         }
