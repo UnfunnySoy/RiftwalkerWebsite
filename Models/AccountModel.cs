@@ -17,7 +17,7 @@ namespace ProjectWebsite.Models
         [Required]
         public string Email { get; set; }
 
-        public List<RunModel> Runs { get; set; }
+        public List<RunModel>? Runs { get; set; }
 
         public AccountModel()
         {

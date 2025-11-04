@@ -14,6 +14,11 @@ namespace ProjectWebsite.Controllers
             return View();
         }
 
+        public IActionResult Details()
+        {
+            return View();
+        }
+
         [HttpPost]
         public IActionResult Create(AccountCreationViewModel? viewModel)
         {

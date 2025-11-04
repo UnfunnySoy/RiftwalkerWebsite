@@ -12,6 +12,25 @@ namespace ProjectWebsite.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Details(Guid? id)
+        {
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            ApplicationDBContext dbContext = new ApplicationDBContext();
+
+            RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
+            if (run == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            return View(run);
+        }
+
         [HttpPost]
         public IActionResult Create(RunModel? run)
         {
@@ -20,13 +39,13 @@ namespace ProjectWebsite.Controllers
                 return RedirectToAction("Index");
             }
 
-            ApplicationDBContext dBContext = new ApplicationDBContext();
+            ApplicationDBContext dbContext = new ApplicationDBContext();
 
-            dBContext.Runs.Add(run);
+            dbContext.Runs.Add(run);
 
             try
             {
-                dBContext.SaveChanges();
+                dbContext.SaveChanges();
             }
             catch (Exception) { }
 
@@ -74,6 +93,34 @@ namespace ProjectWebsite.Controllers
                 dbContext.SaveChanges();
             }
             catch (Exception) { }
+
+            return Content("SUCCESS: " + run.Id);
+        }
+
+        public IActionResult TestRun(Guid? id)
+        {
+            RunModel run = new RunModel();
+            run.Seed = 0;
+            run.Status = 0;
+            run.Score = 0;
+            run.StartTime = DateTime.Now;
+            run.EndTime = DateTime.Now;
+            run.User = null;
+
+            ApplicationDBContext dbContext = new ApplicationDBContext();
+            dbContext.Runs.Add(run);
+
+            dbContext.SaveChanges();
+            /*
+            try
+            {
+                dbContext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return Content("DATABASE FAILURE");
+            }
+            */
 
             return Content("SUCCESS: " + run.Id);
         }
