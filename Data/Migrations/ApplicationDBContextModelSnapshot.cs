@@ -37,7 +37,7 @@ namespace RiftwalkerWebsite.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("ProjectWebsite.Models.RunModel", b =>
@@ -68,7 +68,7 @@ namespace RiftwalkerWebsite.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Runs");
+                    b.ToTable("Runs", (string)null);
                 });
 
             modelBuilder.Entity("ProjectWebsite.Models.RunModel", b =>

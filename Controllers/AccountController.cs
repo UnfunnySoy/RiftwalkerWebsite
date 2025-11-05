@@ -14,9 +14,22 @@ namespace ProjectWebsite.Controllers
             return View();
         }
 
-        public IActionResult Details()
+        public IActionResult Details(Guid? id)
         {
-            return View();
+            if (id == null)
+            {
+                return Content("INVALID ENTRY");
+            }
+
+            ApplicationDBContext dbContext = new ApplicationDBContext();
+
+            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
+            if (account == null)
+            {
+                return Content("ENTRY DOES NOT EXIST");
+            }
+
+            return View(account);
         }
 
         [HttpPost]
@@ -92,7 +105,6 @@ namespace ProjectWebsite.Controllers
             return Content("SUCCESS: " + account.Id);
         }
 
-        [HttpPost]
         public IActionResult TestAccount()
         {
             AccountModel account = new AccountModel();

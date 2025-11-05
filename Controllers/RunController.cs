@@ -17,7 +17,7 @@ namespace ProjectWebsite.Controllers
         {
             if (id == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
             ApplicationDBContext dbContext = new ApplicationDBContext();
@@ -25,7 +25,7 @@ namespace ProjectWebsite.Controllers
             RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
             if (run == null)
             {
-                return RedirectToAction("Index");
+                return Content("ENTRY DOES NOT EXIST");
             }
 
             return View(run);
@@ -36,7 +36,7 @@ namespace ProjectWebsite.Controllers
         {
             if (run == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
             ApplicationDBContext dbContext = new ApplicationDBContext();
@@ -57,7 +57,7 @@ namespace ProjectWebsite.Controllers
         {
             if (id == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
             ApplicationDBContext dbContext = new ApplicationDBContext();
@@ -65,7 +65,7 @@ namespace ProjectWebsite.Controllers
             RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
             if (run == null)
             {
-                return RedirectToAction("Index");
+                return Content("ENTRY DOES NOT EXIST");
             }
 
             return Content("SUCCESS: " + run.Id);
@@ -76,7 +76,7 @@ namespace ProjectWebsite.Controllers
         {
             if (id == null)
             {
-                return RedirectToAction("Index");
+                return Content("INVALID ENTRY");
             }
 
             ApplicationDBContext dbContext = new ApplicationDBContext();
@@ -84,7 +84,7 @@ namespace ProjectWebsite.Controllers
             RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
             if (run == null)
             {
-                return RedirectToAction("Index");
+                return Content("ENTRY DOES NOT EXIST");
             }
             dbContext.Runs.Remove(run);
 
@@ -97,7 +97,7 @@ namespace ProjectWebsite.Controllers
             return Content("SUCCESS: " + run.Id);
         }
 
-        public IActionResult TestRun(Guid? id)
+        public IActionResult TestRun()
         {
             RunModel run = new RunModel();
             run.Seed = 0;
@@ -110,8 +110,6 @@ namespace ProjectWebsite.Controllers
             ApplicationDBContext dbContext = new ApplicationDBContext();
             dbContext.Runs.Add(run);
 
-            dbContext.SaveChanges();
-            /*
             try
             {
                 dbContext.SaveChanges();
@@ -120,7 +118,6 @@ namespace ProjectWebsite.Controllers
             {
                 return Content("DATABASE FAILURE");
             }
-            */
 
             return Content("SUCCESS: " + run.Id);
         }
