@@ -127,20 +127,19 @@ namespace ProjectWebsite.Controllers
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                // 1. Find user by Email
-                var user = dbContext.Accounts.FirstOrDefault(x => x.Email == loginData.Email);
+                // --- FIX: Check x.Username instead of x.Email ---
+                var user = dbContext.Accounts.FirstOrDefault(x => x.Username == loginData.Username);
+                // -----------------------------------------------
 
-                // 2. Check if user exists and password matches
-                // Note: In a real app, use Hashing here instead of plain text comparison
+                // Verify user exists AND password matches
                 if (user == null || user.Password != loginData.Password)
                 {
-                    return Unauthorized(new { message = "Invalid email or password" });
+                    return Unauthorized(new { message = "Invalid username or password" });
                 }
 
-                // 3. Return the JSON the game needs
                 return Ok(new
                 {
-                    access_token = "placeholder_token_123", // We can implement real JWT logic later
+                    access_token = "placeholder_token_123",
                     user_id = user.Id,
                     username = user.Username
                 });
