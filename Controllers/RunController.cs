@@ -15,111 +15,137 @@ namespace ProjectWebsite.Controllers
         [HttpGet]
         public IActionResult Details(Guid? id)
         {
-            if (id == null)
+            if (id == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
+                if (run == null) return Content("ENTRY DOES NOT EXIST");
+
+                return View(run);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-            if (run == null)
-            {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-
-            return View(run);
         }
 
         [HttpPost]
         public IActionResult Create(RunModel? run)
         {
-            if (run == null)
+            if (run == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                dbContext.Runs.Add(run);
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception) { }
+
+                return Content("SUCCESS: " + run.Id);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            dbContext.Runs.Add(run);
-
-            try
-            {
-                dbContext.SaveChanges();
-            }
-            catch (Exception) { }
-
-            return Content("SUCCESS: " + run.Id);
         }
 
         [HttpGet]
         public IActionResult Read(Guid? id)
         {
-            if (id == null)
+            if (id == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
+                if (run == null) return Content("ENTRY DOES NOT EXIST");
+
+                return Content("SUCCESS: " + run.Id);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-            if (run == null)
-            {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-
-            return Content("SUCCESS: " + run.Id);
         }
 
         [HttpDelete]
         public IActionResult Delete(Guid? id)
         {
-            if (id == null)
+            if (id == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
+                if (run == null) return Content("ENTRY DOES NOT EXIST");
+                
+                dbContext.Runs.Remove(run);
+
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception) { }
+
+                return Content("SUCCESS: " + run.Id);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-            if (run == null)
-            {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-            dbContext.Runs.Remove(run);
-
-            try
-            {
-                dbContext.SaveChanges();
-            }
-            catch (Exception) { }
-
-            return Content("SUCCESS: " + run.Id);
         }
 
         public IActionResult TestRun()
         {
-            RunModel run = new RunModel();
-            run.Seed = 0;
-            run.Status = 0;
-            run.Score = 0;
-            run.StartTime = DateTime.Now;
-            run.EndTime = DateTime.Now;
-            run.User = null;
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-            dbContext.Runs.Add(run);
-
-            try
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
+                RunModel run = new RunModel
+                {
+                    Seed = 0,
+                    Status = 0,
+                    Score = 0,
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now,
+                    User = null
+                };
+
+                dbContext.Runs.Add(run);
+
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    return Content("DATABASE FAILURE");
+                }
+
+                return Content("SUCCESS: " + run.Id);
+            }
+        }
+
+        // --- NEW API HELPER CLASS ---
+        public class GameRunUpload
+        {
+            public Guid user_id { get; set; }
+            public int highest_round { get; set; }
+            public int total_coins { get; set; }
+            public string character_class { get; set; }
+        }
+
+        // --- NEW API ENDPOINT FOR GODOT ---
+        [HttpPost]
+        [Route("api/upload-run")]
+        public IActionResult UploadRun([FromBody] GameRunUpload runData)
+        {
+            if (runData == null) return BadRequest(new { message = "No run data received" });
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
+            {
+                // 1. Find the user so we can link the run
+                var user = dbContext.Accounts.FirstOrDefault(x => x.Id == runData.user_id);
+                if (user == null) return NotFound(new { message = "User not found" });
+
+                // 2. Create the RunModel
+                RunModel newRun = new RunModel();
+                newRun.User = user;
+                newRun.Score = runData.total_coins; // Mapping coins to Score
+                newRun.Status = runData.highest_round; // Storing round in Status
+                // Ideally, you'd add 'CharacterClass' to your RunModel in the future!
+                newRun.StartTime = DateTime.Now;
+                newRun.EndTime = DateTime.Now;
+
+                // 3. Save
+                dbContext.Runs.Add(newRun);
                 dbContext.SaveChanges();
-            }
-            catch (Exception)
-            {
-                return Content("DATABASE FAILURE");
-            }
 
-            return Content("SUCCESS: " + run.Id);
+                return Ok(new { status = "success", run_id = newRun.Id });
+            }
         }
     }
 }

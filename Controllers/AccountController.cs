@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using ProjectWebsite.Models;
 using RiftwalkerWebsite.Data;
 using RiftwalkerWebsite.ViewModels;
@@ -16,117 +15,136 @@ namespace ProjectWebsite.Controllers
 
         public IActionResult Details(Guid? id)
         {
-            if (id == null)
+            if (id == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
+                if (account == null) return Content("ENTRY DOES NOT EXIST");
+                
+                return View(account);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-            if (account == null)
-            {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-
-            return View(account);
         }
 
         [HttpPost]
         public IActionResult Create(AccountCreationViewModel? viewModel)
         {
-            if (viewModel == null || viewModel.Username == null || viewModel.Password == null || viewModel.Email == null)
+            if (viewModel == null || string.IsNullOrEmpty(viewModel.Username) || string.IsNullOrEmpty(viewModel.Password) || string.IsNullOrEmpty(viewModel.Email))
             {
                 return Content("INVALID ENTRY");
             }
 
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            AccountModel account = new AccountModel(viewModel);
-            dbContext.Accounts.Add(account);
-
-            try
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                dbContext.SaveChanges();
-            }
-            catch (Exception)
-            {
-                return Content("DATABASE FAILURE");
-            }
+                AccountModel account = new AccountModel(viewModel);
+                dbContext.Accounts.Add(account);
 
-            return Content("SUCCESS: " + account.Id);
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    return Content("DATABASE FAILURE");
+                }
+
+                return Content("SUCCESS: " + account.Id);
+            }
         }
 
         [HttpGet]
         public IActionResult Read(Guid? id)
         {
-            if (id == null)
+            if (id == null) return Content("INVALID ENTRY");
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("INVALID ENTRY");
+                AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
+                if (account == null) return Content("ENTRY DOES NOT EXIST");
+
+                return Content("SUCCESS: " + account.Id);
             }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-            if (account == null)
-            {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-
-            return Content("SUCCESS: " + account.Id);
         }
 
         [HttpDelete]
         public IActionResult Delete(Guid? id)
         {
-            if (id == null)
-            {
-                return Content("INVALID ENTRY");
-            }
+            if (id == null) return Content("INVALID ENTRY");
 
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-
-            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-            if (account == null)
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                return Content("ENTRY DOES NOT EXIST");
-            }
-            dbContext.Accounts.Remove(account);
+                AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
+                if (account == null) return Content("ENTRY DOES NOT EXIST");
 
-            try
-            {
-                dbContext.SaveChanges();
-            }
-            catch (Exception)
-            {
-                return Content("DATABASE FAILURE");
-            }
+                dbContext.Accounts.Remove(account);
 
-            return Content("SUCCESS: " + account.Id);
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    return Content("DATABASE FAILURE");
+                }
+
+                return Content("SUCCESS: " + account.Id);
+            }
         }
 
         public IActionResult TestAccount()
         {
-            AccountModel account = new AccountModel();
-            account.Username = "test";
-            account.Password = "test";
-            account.Email = "test";
-            account.Runs = null;
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-            dbContext.Accounts.Add(account);
-
-            try
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                dbContext.SaveChanges();
-            }
-            catch (Exception) 
-            {
-                return Content("DATABASE FAILURE");
-            }
+                AccountModel account = new AccountModel
+                {
+                    Username = "test",
+                    Password = "test",
+                    Email = "test",
+                    Runs = null
+                };
 
-            return Content("SUCCESS: " + account.Id);
+                dbContext.Accounts.Add(account);
+
+                try
+                {
+                    dbContext.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    return Content("DATABASE FAILURE");
+                }
+
+                return Content("SUCCESS: " + account.Id);
+            }
         }
 
+        // --- NEW API ENDPOINT FOR GODOT ---
+        [HttpPost]
+        [Route("api/login")]
+        public IActionResult Login([FromBody] AccountCreationViewModel loginData)
+        {
+            if (loginData == null) return BadRequest(new { message = "No data received" });
+
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
+            {
+                // 1. Find user by Email
+                var user = dbContext.Accounts.FirstOrDefault(x => x.Email == loginData.Email);
+
+                // 2. Check if user exists and password matches
+                // Note: In a real app, use Hashing here instead of plain text comparison
+                if (user == null || user.Password != loginData.Password)
+                {
+                    return Unauthorized(new { message = "Invalid email or password" });
+                }
+
+                // 3. Return the JSON the game needs
+                return Ok(new
+                {
+                    access_token = "placeholder_token_123", // We can implement real JWT logic later
+                    user_id = user.Id,
+                    username = user.Username
+                });
+            }
+        }
     }
 }
