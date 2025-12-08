@@ -118,6 +118,9 @@ namespace ProjectWebsite.Controllers
             public string character_class { get; set; }
         }
 
+        // --- NEW MEMBER ---
+        private const string SECRET_SALT = "RIFTWALKER_SECRET_SALT_2025"; 
+
         // --- NEW API ENDPOINT FOR GODOT ---
         [HttpPost]
         [Route("api/upload-run")]
@@ -125,6 +128,26 @@ namespace ProjectWebsite.Controllers
         public IActionResult UploadRun([FromBody] GameRunUpload runData)
         {
             if (runData == null) return BadRequest(new { message = "No run data received" });
+
+            // 1. Verify Integrity
+            if (!Request.Headers.TryGetValue("X-Integrity-Hash", out var clientHash))
+            {
+                 return BadRequest(new { message = "Missing integrity hash." });
+            }
+
+            // Hash = SHA256(SALT + HighestRound + TotalCoins)
+            string rawData = SECRET_SALT + runData.highest_round + runData.total_coins;
+            string serverHash = "";
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
+                serverHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
+            }
+
+            if (clientHash.ToString().ToLower() != serverHash)
+            {
+                return BadRequest(new { message = "Integrity check failed." });
+            }
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
