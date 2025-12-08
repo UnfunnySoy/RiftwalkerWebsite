@@ -5,6 +5,14 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// --- NEW: Ensure Database is created automatically ---
+using (var scope = app.Services.CreateScope())
+{
+    var context = new RiftwalkerWebsite.Data.ApplicationDBContext();
+    context.Database.EnsureCreated();
+}
+// ----------------------------------------------------
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -13,7 +21,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

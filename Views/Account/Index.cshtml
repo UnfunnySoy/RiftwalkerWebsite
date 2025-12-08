@@ -12,14 +12,8 @@
         @Html.TextBoxFor(x => x.Username, new { @class = "form-control"})
     </div>
     <div class="mb-3">
-        <label class="form-label">Password</label>
-        @Html.PasswordFor(x => x.Username, new { @class = "form-control" })
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Email address</label>
-        @Html.TextBoxFor(x => x.Email, new { @class = "form-control" })
-        <!--<div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-            --->
+        <label class="form-label">Device ID (For Testing)</label>
+        @Html.TextBoxFor(x => x.DeviceId, new { @class = "form-control" })
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 }

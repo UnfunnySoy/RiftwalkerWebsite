@@ -12,10 +12,7 @@ namespace ProjectWebsite.Models
         public string Username { get; set; }
 
         [Required]
-        public string Password { get; set; }
-
-        [Required]
-        public string Email { get; set; }
+        public string DeviceId { get; set; }
 
         public List<RunModel>? Runs { get; set; }
 
@@ -27,8 +24,7 @@ namespace ProjectWebsite.Models
         public AccountModel(AccountCreationViewModel viewModel) : this()
         {
             Username = viewModel.Username;
-            Password = viewModel.Password;
-            Email = viewModel.Email;
+            DeviceId = viewModel.DeviceId;
         }
     }
 }

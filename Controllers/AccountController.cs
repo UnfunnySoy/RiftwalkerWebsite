@@ -29,7 +29,7 @@ namespace ProjectWebsite.Controllers
         [HttpPost]
         public IActionResult Create(AccountCreationViewModel? viewModel)
         {
-            if (viewModel == null || string.IsNullOrEmpty(viewModel.Username) || string.IsNullOrEmpty(viewModel.Password) || string.IsNullOrEmpty(viewModel.Email))
+            if (viewModel == null || string.IsNullOrEmpty(viewModel.Username) || string.IsNullOrEmpty(viewModel.DeviceId))
             {
                 return Content("INVALID ENTRY");
             }
@@ -98,8 +98,7 @@ namespace ProjectWebsite.Controllers
                 AccountModel account = new AccountModel
                 {
                     Username = "test",
-                    Password = "test",
-                    Email = "test",
+                    DeviceId = "test-device-id", // Dummy ID for test
                     Runs = null
                 };
 
@@ -121,25 +120,42 @@ namespace ProjectWebsite.Controllers
         // --- NEW API ENDPOINT FOR GODOT ---
         [HttpPost]
         [Route("api/login")]
+        [IgnoreAntiforgeryToken]
         public IActionResult Login([FromBody] AccountCreationViewModel loginData)
         {
-            if (loginData == null) return BadRequest(new { message = "No data received" });
+            if (loginData == null || string.IsNullOrEmpty(loginData.DeviceId)) 
+                return BadRequest(new { message = "No device ID received" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                // --- FIX: Check x.Username instead of x.Email ---
-                var user = dbContext.Accounts.FirstOrDefault(x => x.Username == loginData.Username);
-                // -----------------------------------------------
+                // Find user by DeviceId
+                var user = dbContext.Accounts.FirstOrDefault(x => x.DeviceId == loginData.DeviceId);
 
-                // Verify user exists AND password matches
-                if (user == null || user.Password != loginData.Password)
+                if (user != null)
                 {
-                    return Unauthorized(new { message = "Invalid username or password" });
+                    // Update username if it changed
+                    if (!string.IsNullOrEmpty(loginData.Username) && user.Username != loginData.Username)
+                    {
+                        user.Username = loginData.Username;
+                        dbContext.SaveChanges();
+                    }
+                }
+                else
+                {
+                    // Create new user
+                    user = new AccountModel
+                    {
+                        DeviceId = loginData.DeviceId,
+                        Username = !string.IsNullOrEmpty(loginData.Username) ? loginData.Username : "Unknown Wanderer",
+                        Runs = new List<RunModel>()
+                    };
+                    dbContext.Accounts.Add(user);
+                    dbContext.SaveChanges();
                 }
 
                 return Ok(new
                 {
-                    access_token = "placeholder_token_123",
+                    access_token = "placeholder_token_123", // You might want real JWT later
                     user_id = user.Id,
                     username = user.Username
                 });

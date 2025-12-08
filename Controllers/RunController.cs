@@ -121,6 +121,7 @@ namespace ProjectWebsite.Controllers
         // --- NEW API ENDPOINT FOR GODOT ---
         [HttpPost]
         [Route("api/upload-run")]
+        [IgnoreAntiforgeryToken]
         public IActionResult UploadRun([FromBody] GameRunUpload runData)
         {
             if (runData == null) return BadRequest(new { message = "No run data received" });

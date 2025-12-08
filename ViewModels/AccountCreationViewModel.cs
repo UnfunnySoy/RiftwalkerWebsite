@@ -2,8 +2,7 @@
 {
     public class AccountCreationViewModel
     {
-        public string Username;
-        public string Password;
-        public string Email;
+        public string Username { get; set; }
+        public string DeviceId { get; set; }
     }
 }
