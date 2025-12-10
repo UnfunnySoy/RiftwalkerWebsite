@@ -149,27 +149,30 @@ namespace ProjectWebsite.Controllers
                 return BadRequest(new { message = "Integrity check failed." });
             }
 
-            using (ApplicationDBContext dbContext = new ApplicationDBContext())
+            ApplicationDBContext dbContext = new ApplicationDBContext();
+            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == runData.user_id);
+            if (account == null) return NotFound(new { message = "User not found" });
+
+            // 2. Create the RunModel
+            RunModel run = new RunModel();
+            run.User = account;
+            run.Score = runData.total_coins; // Mapping coins to Score
+            run.Status = runData.highest_round; // Storing round in Status
+            // Ideally, you'd add 'CharacterClass' to your RunModel in the future!
+            run.StartTime = DateTime.Now;
+            run.EndTime = DateTime.Now;
+
+            dbContext.Runs.Add(run);
+            try
             {
-                // 1. Find the user so we can link the run
-                var user = dbContext.Accounts.FirstOrDefault(x => x.Id == runData.user_id);
-                if (user == null) return NotFound(new { message = "User not found" });
-
-                // 2. Create the RunModel
-                RunModel newRun = new RunModel();
-                newRun.User = user;
-                newRun.Score = runData.total_coins; // Mapping coins to Score
-                newRun.Status = runData.highest_round; // Storing round in Status
-                // Ideally, you'd add 'CharacterClass' to your RunModel in the future!
-                newRun.StartTime = DateTime.Now;
-                newRun.EndTime = DateTime.Now;
-
-                // 3. Save
-                dbContext.Runs.Add(newRun);
                 dbContext.SaveChanges();
-
-                return Ok(new { status = "success", run_id = newRun.Id });
             }
+            catch (Exception)
+            {
+                return Content("DATABASE FAILURE");
+            }
+
+            return Ok(new { status = "success", run_id = run.Id });
         }
     }
 }
