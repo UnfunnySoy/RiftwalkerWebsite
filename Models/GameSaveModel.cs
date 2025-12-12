@@ -8,9 +8,7 @@ namespace ProjectWebsite.Models
         [Key]
         public Guid Id { get; set; }
 
-        public Guid UserId { get; set; }
-        [ForeignKey("UserId")]
-        public AccountModel? User { get; set; }
+        public AccountModel Account { get; set; }
 
         public byte[] SaveData { get; set; } = Array.Empty<byte>();
 

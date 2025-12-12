@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ProjectWebsite.Models.RunModel>
+﻿@model IEnumerable<RiftwalkerWebsite.ViewModels.RunViewModel>
 
 @{
     ViewData["Title"] = "Index";
@@ -9,22 +9,21 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Seed)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Score)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndTime)
-            </th>
-            <th></th>
+            <th>@Html.DisplayNameFor(model => model.Username)</th>
+            <th>@Html.DisplayNameFor(model => model.Seed)</th>
+            <th>@Html.DisplayNameFor(model => model.Score)</th>
+            <th>@Html.DisplayNameFor(model => model.Duration)</th>
         </tr>
     </thead>
+    <tbody>
+        @foreach (RunViewModel run in Model)
+        {
+            <tr>
+                <td>@run.Username</td>
+                <td>@run.Seed</td>
+                <td>@run.Score</td>
+                <td>@run.Duration</td>
+            </tr>
+        }
+    </tbody>
 </table>

@@ -22,7 +22,7 @@ namespace ProjectWebsite.Models
         [Required]
         public DateTime EndTime { get; set; }
 
-        public AccountModel? User { get; set; } 
+        public AccountModel? Account { get; set; } 
 
         public RunModel()
         {

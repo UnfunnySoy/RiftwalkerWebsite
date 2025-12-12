@@ -1,85 +1,91 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProjectWebsite.Models;
 using RiftwalkerWebsite.Data;
-using System.Security.Principal;
+using RiftwalkerWebsite.ViewModels;
 
 namespace ProjectWebsite.Controllers
 {
     public class RunController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            using (ApplicationDBContext dbContext = new ApplicationDBContext())
+            {
+                List<RunModel> runModels = dbContext.Runs.OrderByDescending(x => x.Score).ThenByDescending(x => x.Id).ToList();
+                List<RunViewModel> runViewModels = new List<RunViewModel>();
+                foreach (RunModel run in runModels)
+                {
+                    RunViewModel runView = new RunViewModel(run);
+                    runViewModels.Add(runView);
+                }
+                return View(runViewModels);
+            }
         }
 
         [HttpGet]
         public IActionResult Details(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-                if (run == null) return Content("ENTRY DOES NOT EXIST");
+                if (run == null) return NotFound(new { message = "Run not found" });
 
                 return View(run);
             }
         }
 
+        /*      //Unused. Handled by Godot API classes
         [HttpPost]
         public IActionResult Create(RunModel? run)
         {
-            if (run == null) return Content("INVALID ENTRY");
+            if (run == null) return BadRequest(new { message = "Failure" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 dbContext.Runs.Add(run);
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception) { }
+                dbContext.SaveChanges();
 
-                return Content("SUCCESS: " + run.Id);
+                return Ok("Run created");
             }
         }
+        */
 
         [HttpGet]
         public IActionResult Read(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-                if (run == null) return Content("ENTRY DOES NOT EXIST");
+                if (run == null) return NotFound(new { message = "Run not found" });
 
-                return Content("SUCCESS: " + run.Id);
+                return Ok(run);
             }
         }
 
         [HttpDelete]
         public IActionResult Delete(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 RunModel? run = dbContext.Runs.FirstOrDefault(x => x.Id == id);
-                if (run == null) return Content("ENTRY DOES NOT EXIST");
-                
+                if (run == null) return NotFound(new { message = "Run not found" });
+
                 dbContext.Runs.Remove(run);
+                dbContext.SaveChanges();
 
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception) { }
-
-                return Content("SUCCESS: " + run.Id);
+                return Ok("Run deleted");
             }
         }
 
+        /*      //Unused. Testing endpoint for making runs
+        [HttpPost]
         public IActionResult TestRun()
         {
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
@@ -95,84 +101,11 @@ namespace ProjectWebsite.Controllers
                 };
 
                 dbContext.Runs.Add(run);
-
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception)
-                {
-                    return Content("DATABASE FAILURE");
-                }
+                dbContext.SaveChanges();
 
                 return Content("SUCCESS: " + run.Id);
             }
         }
-
-        // --- NEW API HELPER CLASS ---
-        public class GameRunUpload
-        {
-            public Guid user_id { get; set; }
-            public int highest_round { get; set; }
-            public int total_coins { get; set; }
-            public string character_class { get; set; }
-        }
-
-        // --- NEW MEMBER ---
-        private const string SECRET_SALT = "RIFTWALKER_SECRET_SALT_2025"; 
-
-        // --- NEW API ENDPOINT FOR GODOT ---
-        [HttpPost]
-        [Route("api/upload-run")]
-        [IgnoreAntiforgeryToken]
-        public IActionResult UploadRun([FromBody] GameRunUpload runData)
-        {
-            if (runData == null) return BadRequest(new { message = "No run data received" });
-
-            // 1. Verify Integrity
-            if (!Request.Headers.TryGetValue("X-Integrity-Hash", out var clientHash))
-            {
-                 return BadRequest(new { message = "Missing integrity hash." });
-            }
-
-            // Hash = SHA256(SALT + HighestRound + TotalCoins)
-            string rawData = SECRET_SALT + runData.highest_round + runData.total_coins;
-            string serverHash = "";
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawData));
-                serverHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
-            }
-
-            if (clientHash.ToString().ToLower() != serverHash)
-            {
-                return BadRequest(new { message = "Integrity check failed." });
-            }
-
-            ApplicationDBContext dbContext = new ApplicationDBContext();
-            AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == runData.user_id);
-            if (account == null) return NotFound(new { message = "User not found" });
-
-            // 2. Create the RunModel
-            RunModel run = new RunModel();
-            run.User = account;
-            run.Score = runData.total_coins; // Mapping coins to Score
-            run.Status = runData.highest_round; // Storing round in Status
-            // Ideally, you'd add 'CharacterClass' to your RunModel in the future!
-            run.StartTime = DateTime.Now;
-            run.EndTime = DateTime.Now;
-
-            dbContext.Runs.Add(run);
-            try
-            {
-                dbContext.SaveChanges();
-            }
-            catch (Exception)
-            {
-                return Content("DATABASE FAILURE");
-            }
-
-            return Ok(new { status = "success", run_id = run.Id });
-        }
+        */
     }
 }

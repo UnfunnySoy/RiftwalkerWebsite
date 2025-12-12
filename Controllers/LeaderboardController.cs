@@ -15,9 +15,9 @@ namespace ProjectWebsite.Controllers
             {
                 // We want to find the highest round (Status) for each unique user
                 var leaderboard = dbContext.Runs
-                    .Where(r => r.User != null)
+                    .Where(r => r.Account != null)
                     // Group by the User entity (or ID/Username if simpler for SQL translation)
-                    .GroupBy(r => r.User.Username)
+                    .GroupBy(r => r.Account.Username)
                     .Select(g => new
                     {
                         username = g.Key,

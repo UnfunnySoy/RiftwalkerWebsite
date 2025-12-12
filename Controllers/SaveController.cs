@@ -9,13 +9,13 @@ namespace ProjectWebsite.Controllers
     [ApiController]
     public class SaveController : ControllerBase
     {
-        // GET: api/save/{userId}
-        [HttpGet("{userId}")]
-        public IActionResult GetSave(Guid userId)
+        // GET: api/save/{id}
+        [HttpGet("{id}")]
+        public IActionResult GetSave(Guid id)
         {
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                var save = dbContext.GameSaves.FirstOrDefault(s => s.UserId == userId);
+                GameSaveModel? save = dbContext.GameSaves.FirstOrDefault(s => s.Account.Id == id);
                 if (save == null || save.SaveData == null || save.SaveData.Length == 0)
                 {
                     return NotFound(new { message = "No cloud save found." });
@@ -49,7 +49,7 @@ namespace ProjectWebsite.Controllers
                 }
 
                 // Check for existing save
-                var existingSave = dbContext.GameSaves.FirstOrDefault(s => s.UserId == user_id);
+                var existingSave = dbContext.GameSaves.FirstOrDefault(s => s.Account.Id == user_id);
                 if (existingSave != null)
                 {
                     existingSave.SaveData = fileBytes;
@@ -59,7 +59,7 @@ namespace ProjectWebsite.Controllers
                 {
                     var newSave = new GameSaveModel
                     {
-                        UserId = user_id,
+                        Account = user,
                         SaveData = fileBytes,
                         LastUpdated = DateTime.UtcNow
                     };

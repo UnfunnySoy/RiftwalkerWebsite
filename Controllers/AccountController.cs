@@ -15,13 +15,13 @@ namespace ProjectWebsite.Controllers
 
         public IActionResult Details(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-                if (account == null) return Content("ENTRY DOES NOT EXIST");
-                
+                if (account == null) return NotFound(new { message = "Account not found" });
+
                 return View(account);
             }
         }
@@ -31,63 +31,48 @@ namespace ProjectWebsite.Controllers
         {
             if (viewModel == null || string.IsNullOrEmpty(viewModel.Username) || string.IsNullOrEmpty(viewModel.DeviceId))
             {
-                return Content("INVALID ENTRY");
+                return BadRequest(new { message = "Failure" });
             }
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                AccountModel account = new AccountModel(viewModel);
+                AccountModel account = new AccountModel(viewModel);             //CHECK THIS CONSTRUCTOR
+                
                 dbContext.Accounts.Add(account);
+                dbContext.SaveChanges();
 
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception)
-                {
-                    return Content("DATABASE FAILURE");
-                }
-
-                return Content("SUCCESS: " + account.Id);
+                return Ok("Account created");
             }
         }
 
         [HttpGet]
         public IActionResult Read(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-                if (account == null) return Content("ENTRY DOES NOT EXIST");
+                if (account == null) return NotFound(new { message = "Account not found" });
 
-                return Content("SUCCESS: " + account.Id);
+                return Ok(account);
             }
         }
 
         [HttpDelete]
         public IActionResult Delete(Guid? id)
         {
-            if (id == null) return Content("INVALID ENTRY");
+            if (id == null) return BadRequest(new { message = "No id provided" });
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
                 AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.Id == id);
-                if (account == null) return Content("ENTRY DOES NOT EXIST");
+                if (account == null) return NotFound(new { message = "Account not found" });
 
                 dbContext.Accounts.Remove(account);
+                dbContext.SaveChanges();
 
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception)
-                {
-                    return Content("DATABASE FAILURE");
-                }
-
-                return Content("SUCCESS: " + account.Id);
+                return Ok("Account deleted");
             }
         }
 
@@ -103,15 +88,7 @@ namespace ProjectWebsite.Controllers
                 };
 
                 dbContext.Accounts.Add(account);
-
-                try
-                {
-                    dbContext.SaveChanges();
-                }
-                catch (Exception)
-                {
-                    return Content("DATABASE FAILURE");
-                }
+                dbContext.SaveChanges();
 
                 return Content("SUCCESS: " + account.Id);
             }
@@ -128,36 +105,35 @@ namespace ProjectWebsite.Controllers
 
             using (ApplicationDBContext dbContext = new ApplicationDBContext())
             {
-                // Find user by DeviceId
-                var user = dbContext.Accounts.FirstOrDefault(x => x.DeviceId == loginData.DeviceId);
+                AccountModel? account = dbContext.Accounts.FirstOrDefault(x => x.DeviceId == loginData.DeviceId);
 
-                if (user != null)
+                if (account != null)
                 {
                     // Update username if it changed
-                    if (!string.IsNullOrEmpty(loginData.Username) && user.Username != loginData.Username)
+                    if (!string.IsNullOrEmpty(loginData.Username) && account.Username != loginData.Username)
                     {
-                        user.Username = loginData.Username;
+                        account.Username = loginData.Username;
                         dbContext.SaveChanges();
                     }
                 }
                 else
                 {
                     // Create new user
-                    user = new AccountModel
+                    account = new AccountModel
                     {
                         DeviceId = loginData.DeviceId,
                         Username = !string.IsNullOrEmpty(loginData.Username) ? loginData.Username : "Unknown Wanderer",
                         Runs = new List<RunModel>()
                     };
-                    dbContext.Accounts.Add(user);
+                    dbContext.Accounts.Add(account);
                     dbContext.SaveChanges();
                 }
 
                 return Ok(new
                 {
                     access_token = "placeholder_token_123", // You might want real JWT later
-                    user_id = user.Id,
-                    username = user.Username
+                    user_id = account.Id,
+                    username = account.Username
                 });
             }
         }
