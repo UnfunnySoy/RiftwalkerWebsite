@@ -48,6 +48,24 @@ namespace ProjectWebsite.Controllers
                     fileBytes = ms.ToArray();
                 }
 
+                // --- SECURITY CHECK (R.6.3.4): Validate Magic Numbers ---
+                if (fileBytes.Length >= 2)
+                {
+                    // Check for EXE Header (MZ = 0x4D 0x5A)
+                    if (fileBytes[0] == 0x4D && fileBytes[1] == 0x5A)
+                    {
+                        return BadRequest(new { message = "Invalid file format: Executables are not allowed." });
+                    }
+
+                    // Check for JSON ({ = 0x7B)
+                    // Note: Godot saves are JSON, so we expect '{' as the first byte.
+                    if (fileBytes[0] != 0x7B) 
+                    {
+                         return BadRequest(new { message = "Invalid file format: Not a valid save file." });
+                    }
+                }
+                // --------------------------------------------------------
+
                 // Check for existing save
                 var existingSave = dbContext.GameSaves.FirstOrDefault(s => s.Account.Id == user_id);
                 if (existingSave != null)

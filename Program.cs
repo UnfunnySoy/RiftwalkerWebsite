@@ -1,7 +1,28 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// --- RATE LIMITING (Security Requirement R.6.3.3) ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("DoS-Protection", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Request.Headers["X-Device-Id"].ToString() ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 60,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
+// ----------------------------------------------------
 
 var app = builder.Build();
 
@@ -26,10 +47,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Enable Rate Limiting Middleware (Must be after UseRouting)
+app.UseRateLimiter();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .RequireRateLimiting("DoS-Protection"); // Apply globally to default route mapping
 
 app.Run();

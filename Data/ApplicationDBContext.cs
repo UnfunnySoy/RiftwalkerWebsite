@@ -10,6 +10,7 @@ namespace RiftwalkerWebsite.Data
         public DbSet<AccountModel> Accounts { get; set; }
         public DbSet<RunModel> Runs { get; set; }
         public DbSet<GameSaveModel> GameSaves { get; set; }
+        public DbSet<SecurityAuditModel> SecurityAudits { get; set; }
 
         public ApplicationDBContext()
         {
