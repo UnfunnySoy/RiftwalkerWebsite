@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjectWebsite.Models
 {
@@ -22,6 +23,8 @@ namespace ProjectWebsite.Models
         [Required]
         public DateTime EndTime { get; set; }
 
+        public Guid? UserId { get; set; }
+        [ForeignKey("UserId")]
         public AccountModel? Account { get; set; } 
 
         public RunModel()
